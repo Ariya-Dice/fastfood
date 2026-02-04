@@ -143,7 +143,7 @@ const goToBranches = () => {
         <header className="relative h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=2000&auto=format&fit=crop" 
+              src="/images/burger-3.jpg" 
               className="w-full h-full object-cover opacity-70 scale-100 transition-transform duration-[10s] hover:scale-110"
               alt="Hero Burger"
             />
@@ -343,7 +343,7 @@ const goToBranches = () => {
         {/* Special Promo */}
         <div className="mb-12 rounded-[2.5rem] overflow-hidden relative h-60 bg-black group cursor-pointer shadow-2xl shadow-black/10">
            <img 
-             src="https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=1200&auto=format&fit=crop" 
+             src="/images/promo-1.jpg" 
              className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-[2s]" 
              alt="Promo"
            />
