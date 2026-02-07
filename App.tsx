@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { categories, products, branches, Branch } from './data/mockData';
 import { Product, Category, CartItem } from './types';
+import LoadingSpinner from './LoadingSpinner';
 // حذف import پیشنهاد هوشمند Gemini به درخواست کارفرما
 
 /**
@@ -44,16 +45,29 @@ const [searchQuery, setSearchQuery] = useState('');
 const [cart, setCart] = useState<CartItem[]>([]);
   // وضعیت باز یا بسته بودن پنل سبد خرید
 const [isCartOpen, setIsCartOpen] = useState(false);
+  // وضعیت لودینگ برنامه (Burgerland style)
+const [isLoading, setIsLoading] = useState(true);
 // حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
 // حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
 
   // محاسبه محصولات فیلترشده با توجه به دسته‌بندی و جستجو
 const filteredProducts = useMemo(() => {
-    return products.filter(p => 
-      (p.category === selectedCategory) && 
+    return products.filter(p =>
+      (p.category === selectedCategory) &&
       (p.name.includes(searchQuery) || p.description.includes(searchQuery))
     );
   }, [selectedCategory, searchQuery]);
+
+  // Burgerland loading effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      // Remove loading class from body
+      document.body.classList.remove('loading');
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
  * افزودن محصول به سبد خرید
@@ -117,12 +131,23 @@ const goToBranches = () => {
   };
 
   /**
- * رندر صفحه اصلی (landing page)
- */
+   * بررسی وضعیت لودینگ و نمایش LoadingSpinner اگر لازم باشد
+   */
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-burgerland-gray flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  /**
+   * رندر صفحه اصلی (landing page)
+   */
 // View: Landing Page (burgerland.com)
   if (view === 'home') {
     return (
-      <div className="min-h-screen bg-black text-white font-['Vazirmatn'] selection:bg-yellow-400 selection:text-black">
+      <div className="min-h-screen bg-burgerland-black text-white font-burgerland selection:bg-burgerland-yellow selection:text-burgerland-black">
         {/* Navigation */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -133,7 +158,7 @@ const goToBranches = () => {
               <a href="#" className="hover:text-yellow-400 transition-colors">درباره ما</a>
               <a href="#" className="hover:text-yellow-400 transition-colors">تماس</a>
             </div>
-            <button onClick={goToBranches} className="bg-yellow-400 text-black px-8 py-2.5 rounded-full font-black hover:bg-yellow-300 transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-yellow-400/20">
+            <button onClick={goToBranches} className="bg-burgerland-yellow text-burgerland-black px-8 py-2.5 rounded-full font-black hover:bg-yellow-300 transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-yellow-400/20">
               سفارش آنلاین
             </button>
           </div>
@@ -212,7 +237,7 @@ const goToBranches = () => {
 // View: Branch Selection (order.burgerland.com)
   if (view === 'branches') {
     return (
-      <div className="min-h-screen bg-zinc-50 font-['Vazirmatn'] text-right selection:bg-yellow-400">
+      <div className="min-h-screen bg-burgerland-gray font-burgerland text-right selection:bg-burgerland-yellow">
         <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 p-5 border-b border-zinc-100">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <button onClick={goHome} className="p-3 hover:bg-zinc-100 rounded-2xl transition-all group active:scale-90">
@@ -275,7 +300,7 @@ const goToBranches = () => {
  */
 // View: Menu/Order (order.burgerland.com/order/...)
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col font-['Vazirmatn'] text-right selection:bg-yellow-400">
+    <div className="min-h-screen bg-burgerland-gray flex flex-col font-burgerland text-right selection:bg-burgerland-yellow">
       <header className="bg-white shadow-sm sticky top-0 z-40 transition-all duration-300 border-b border-zinc-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
