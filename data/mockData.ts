@@ -26,7 +26,9 @@ export const branches: Branch[] = [
     image: '/images/restaurant-1.jpg',
   },
   {
-    id: 'saadat-abad',    address: 'خیابان آزمایشی یکم، نبش کوچه امید، ساختمان ۴۲',
+    id: 'saadat-abad',
+    name: 'شعبه سعادت آباد',
+    address: 'خیابان آزمایشی یکم، نبش کوچه امید، ساختمان ۴۲',
     isOpen: true,
     image: '/images/restaurant-2.jpg',
   },

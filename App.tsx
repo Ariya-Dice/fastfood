@@ -4,7 +4,7 @@
  * مدیریت نماهای صفحه، سبد خرید، جستجو، دسته‌بندی و منطق سفارش آنلاین
  * توضیحات کامل‌تر ذیل هر تابع و متغیر درج شده است.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Search, 
   ShoppingCart, 
@@ -12,14 +12,13 @@ import {
   Plus, 
   MapPin, 
   Clock, 
-  Star,
-  Sparkles,
   ArrowRight,
   X,
   Phone,
   Instagram,
-  ChevronLeft,
-  ArrowLeft
+  ArrowLeft,
+  ChevronDown,
+  Share2
 } from 'lucide-react';
 import { categories, products, branches, Branch } from './data/mockData';
 import { Product, Category, CartItem } from './types';
@@ -47,27 +46,71 @@ const [cart, setCart] = useState<CartItem[]>([]);
 const [isCartOpen, setIsCartOpen] = useState(false);
   // وضعیت لودینگ برنامه (Burgerland style)
 const [isLoading, setIsLoading] = useState(true);
+  // تب صفحه منو: منوی سفارش | اطلاعات رستوران
+const [orderTab, setOrderTab] = useState<'menu' | 'info'>('menu');
+  // دسته‌ای که الان در view است (برای هایلایت دکمه با اسکرول)
+const [visibleCategoryId, setVisibleCategoryId] = useState<string>(categories[0].id);
 // حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
 // حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
 
-  // محاسبه محصولات فیلترشده با توجه به دسته‌بندی و جستجو
-const filteredProducts = useMemo(() => {
+  // محاسبه محصولات فیلترشده با توجه به دسته‌بندی و جستجو (برای هایلایت دسته)
+  const filteredProducts = useMemo(() => {
     return products.filter(p =>
       (p.category === selectedCategory) &&
       (p.name.includes(searchQuery) || p.description.includes(searchQuery))
     );
   }, [selectedCategory, searchQuery]);
 
+  // گروه‌بندی محصولات بر اساس دسته برای اسکرول یکپارچه (همه دسته‌ها پشت‌سرهم)
+  const productsByCategory = useMemo(() => {
+    return categories.map(cat => ({
+      category: cat,
+      products: products.filter(p =>
+        p.category === cat.id &&
+        (searchQuery === '' || p.name.includes(searchQuery) || p.description.includes(searchQuery))
+      ),
+    }));
+  }, [searchQuery]);
+
   // Burgerland loading effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-      // Remove loading class from body
       document.body.classList.remove('loading');
     }, 1500);
-
     return () => clearTimeout(timer);
   }, []);
+
+  // با کلیک روی دسته، اسکرول به همان بخش و هایلایت همان دسته
+  useEffect(() => {
+    if (orderTab !== 'menu') return;
+    const el = document.getElementById(`cat-${selectedCategory}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setVisibleCategoryId(selectedCategory);
+  }, [selectedCategory, orderTab]);
+
+  // با اسکرول، دستهٔ در حال نمایش را برای هایلایت دکمه به‌روز کن
+  useEffect(() => {
+    if (orderTab !== 'menu') return;
+    const sectionIds = productsByCategory.filter(({ products: p }) => p.length > 0).map(({ category }) => category.id);
+    if (sectionIds.length === 0) return;
+    const observed: Element[] = [];
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const id = (e.target as HTMLElement).id.replace('cat-', '');
+          if (id) setVisibleCategoryId(id);
+        });
+      },
+      { root: null, rootMargin: '-100px 0px -65% 0px', threshold: 0 }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(`cat-${id}`);
+      if (el) { obs.observe(el); observed.push(el); }
+    });
+    return () => { observed.forEach((el) => obs.unobserve(el)); };
+  }, [orderTab, searchQuery]);
 
   /**
  * افزودن محصول به سبد خرید
@@ -192,30 +235,6 @@ const goToBranches = () => {
           </div>
         </header>
 
-        {/* Features Section */}
-        <section className="py-32 px-4 bg-zinc-950">
-          <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-5xl font-black mb-20">چرا فست‌فودیـو؟</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-              <div className="group p-10 rounded-[2.5rem] bg-zinc-900 border border-white/5 hover:border-yellow-400/30 transition-all duration-500 hover:-translate-y-4">
-                <div className="text-7xl mb-8 group-hover:scale-125 transition-transform duration-500">🥩</div>
-                <h3 className="text-3xl font-black mb-5 text-yellow-400">گوشت ۱۰۰٪ تازه</h3>
-                <p className="text-zinc-400 text-lg leading-relaxed">استفاده از بهترین قطعات گوشت گوساله تازه که به صورت روزانه آماده می‌شوند.</p>
-              </div>
-              <div className="group p-10 rounded-[2.5rem] bg-zinc-900 border border-white/5 hover:border-yellow-400/30 transition-all duration-500 hover:-translate-y-4">
-                <div className="text-7xl mb-8 group-hover:scale-125 transition-transform duration-500">🥖</div>
-                <h3 className="text-3xl font-black mb-5 text-yellow-400">نان پخت روز</h3>
-                <p className="text-zinc-400 text-lg leading-relaxed">نان‌های مخصوص فست‌فودیـو که هر صبح در نانوایی اختصاصی ما پخته می‌شوند.</p>
-              </div>
-              <div className="group p-10 rounded-[2.5rem] bg-zinc-900 border border-white/5 hover:border-yellow-400/30 transition-all duration-500 hover:-translate-y-4">
-                <div className="text-7xl mb-8 group-hover:scale-125 transition-transform duration-500">👨‍🍳</div>
-                <h3 className="text-3xl font-black mb-5 text-yellow-400">دستور پخت ویژه</h3>
-                <p className="text-zinc-400 text-lg leading-relaxed">ترکیباتی که فقط در فست‌فودیـو پیدا می‌کنید، همراه با سس‌های جادویی ما.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Footer */}
         <footer className="bg-black py-20 border-t border-white/5">
            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12">
@@ -232,297 +251,352 @@ const goToBranches = () => {
   }
 
   /**
- * رندر صفحه انتخاب شعبه (branches view)
+ * رندر صفحه انتخاب شعبه (branches view) - طراحی مینیمال مطابق برگرلند
  */
 // View: Branch Selection (order.burgerland.com)
   if (view === 'branches') {
     return (
-      <div className="min-h-screen bg-burgerland-gray font-burgerland text-right selection:bg-burgerland-yellow">
-        <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 p-5 border-b border-zinc-100">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <button onClick={goHome} className="p-3 hover:bg-zinc-100 rounded-2xl transition-all group active:scale-90">
-              <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
-            </button>
-            <h1 className="text-2xl font-black tracking-tight">کجا هستید؟</h1>
-            <div className="w-12"></div>
+      <div className="min-h-screen font-burgerland text-right selection:bg-amber-500 selection:text-black relative overflow-hidden">
+        {/* پس‌زمینه تار شده */}
+        <div className="fixed inset-0 z-0">
+          <img
+            src="/images/restaurant-1.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        </div>
+
+        {/* هدر: ورود چپ، لوگو راست */}
+        <header className="relative z-10 flex items-center justify-between px-6 py-5">
+          <button
+            type="button"
+            onClick={goHome}
+            className="bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors"
+          >
+            بازگشت
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🍔</span>
+            <span className="text-amber-500 font-black text-xl tracking-tight">fast foodio</span>
           </div>
         </header>
-        
-        <main className="max-w-5xl mx-auto p-8 space-y-12">
-          <div className="text-center py-12 animate-in fade-in slide-in-from-top-4 duration-700">
-            <h2 className="text-5xl font-black mb-4 text-zinc-900">انتخاب شعبه</h2>
-            <p className="text-zinc-500 text-xl font-medium">نزدیک‌ترین شعبه را برای سفارش آنلاین انتخاب کنید</p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {branches.map(branch => (
-              <div 
-                key={branch.id}
-                onClick={() => handleBranchSelect(branch)}
-                className={`group relative bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border-2 ${branch.isOpen ? 'border-transparent hover:border-yellow-400' : 'opacity-60 grayscale cursor-not-allowed'}`}
-              >
-                <div className="h-60 overflow-hidden relative">
-                  <img src={branch.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={branch.name} />
-                  {!branch.isOpen && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
-                      <span className="bg-white text-black px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest shadow-xl">بسته است</span>
-                    </div>
-                  )}
-                  {branch.isOpen && (
-                    <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-black shadow-lg">
-                      باز است
-                    </div>
-                  )}
-                </div>
-                <div className="p-8">
-                  <h3 className="text-2xl font-black mb-2 group-hover:text-yellow-600 transition-colors">{branch.name}</h3>
-                  <p className="text-zinc-500 text-sm mb-6 font-medium leading-relaxed">{branch.address}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-50">
-                    <div className="flex items-center gap-3 text-zinc-400">
-                      <Clock size={18} />
-                      <span className="text-sm font-bold">۳۰-۴۵ دقیقه</span>
-                    </div>
-                    <div className={`p-3 rounded-2xl transition-all ${branch.isOpen ? 'bg-zinc-50 group-hover:bg-yellow-400 text-zinc-400 group-hover:text-black group-hover:rotate-12' : 'bg-zinc-100 text-zinc-300'}`}>
-                      <ArrowRight className="rotate-180" size={24} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* بخش مرکزی: عنوان + گرید شعب */}
+        <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-180px)] px-4 py-8">
+          <div className="w-full max-w-2xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 md:p-10">
+            <h2 className="text-center text-zinc-800 font-black text-xl md:text-2xl mb-8">
+              لطفا شعبه مورد نظر خود را انتخاب کنید
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {branches.map((branch) => (
+                <button
+                  key={branch.id}
+                  type="button"
+                  onClick={() => handleBranchSelect(branch)}
+                  className={`py-4 px-3 rounded-xl text-center font-bold text-sm transition-all border-2 ${
+                    branch.isOpen
+                      ? 'bg-white text-zinc-800 border-zinc-200 hover:border-amber-400 hover:bg-amber-50/80'
+                      : 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-80'
+                  }`}
+                >
+                  {branch.name}
+                </button>
+              ))}
+            </div>
           </div>
         </main>
+
+        {/* فوتر: اینستاگرام + کپی‌رایت */}
+        <footer className="relative z-10 flex items-center justify-between px-6 py-5 text-white/90">
+          <a
+            href="#"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="اینستاگرام"
+          >
+            <Instagram size={24} strokeWidth={1.5} />
+          </a>
+          <p className="text-xs md:text-sm font-medium">
+            © حقوق مادی و معنوی متعلق به FASTFOODIO است.
+          </p>
+        </footer>
       </div>
     );
   }
 
   /**
- * رندر صفحه منو و سبد خرید
+ * رندر صفحه منو و سبد خرید - طراحی مطابق برگرلند (هیرو قرمز، سبد چپ، منو راست)
  */
 // View: Menu/Order (order.burgerland.com/order/...)
   return (
-    <div className="min-h-screen bg-burgerland-gray flex flex-col font-burgerland text-right selection:bg-burgerland-yellow">
-      <header className="bg-white shadow-sm sticky top-0 z-40 transition-all duration-300 border-b border-zinc-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button onClick={goToBranches} className="w-14 h-14 bg-yellow-400 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-3 border-2 border-black hover:rotate-0 transition-all active:scale-90">
-              BL
-            </button>
-            <div className="hidden sm:block">
-              <h1 className="font-black text-xl">فست‌فودیـو</h1>
-              <div className="flex items-center text-xs text-zinc-400 font-bold gap-2">
-                <MapPin size={12} className="text-yellow-500" />
-                <span>{selectedBranch?.name}</span>
-                <span className="w-1 h-1 bg-zinc-200 rounded-full"></span>
-                <Clock size={12} />
-                <span>۳۰-۴۵ دقیقه</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="relative group flex-1 max-w-md">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-yellow-500 transition-colors" size={20} />
-            <input 
-              type="text" 
-              placeholder="چی میل داری؟"
-              className="w-full bg-zinc-100 border-2 border-transparent rounded-2xl py-3 pr-12 pl-4 focus:bg-white focus:border-yellow-400 text-sm font-bold outline-none transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-3.5 rounded-2xl bg-zinc-900 text-white hover:bg-black transition-all transform active:scale-90 shadow-xl shadow-black/10"
+    <div className="min-h-screen bg-zinc-100 font-burgerland text-right selection:bg-amber-500 selection:text-black flex flex-col">
+      {/* نوار بالایی مشکی: بازگشت | ورود | لوگو (کلیک = خانه) */}
+      <header className="h-14 bg-black flex items-center justify-between px-4 md:px-6 shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goToBranches}
+            className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-lg font-bold text-sm border border-white/20 hover:bg-zinc-800 transition-colors"
+            title="بازگشت به انتخاب شعبه"
           >
-            <ShoppingCart size={24} />
-            {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-yellow-400 text-black text-[10px] w-6 h-6 flex items-center justify-center rounded-xl border-2 border-white font-black animate-bounce shadow-lg">
-                {totalItems}
-              </span>
-            )}
+            <ArrowRight className="w-5 h-5" />
+            <span className="hidden sm:inline">بازگشت</span>
+          </button>
+          <button type="button" className="bg-black text-white px-4 py-2 rounded-lg font-bold text-sm border border-white/20 hover:bg-zinc-800 transition-colors hidden sm:inline-block">
+            ورود
           </button>
         </div>
-
-        {/* Categories Bar */}
-        <div className="bg-white border-t border-zinc-50 overflow-x-auto no-scrollbar py-3">
-          <div className="max-w-6xl mx-auto px-6 flex gap-4">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-2xl text-sm font-black transition-all duration-300 border-2 ${
-                  selectedCategory === cat.id 
-                    ? 'bg-black text-white border-black shadow-xl shadow-black/10 transform scale-105 translate-y-[-2px]' 
-                    : 'bg-white text-zinc-400 border-zinc-100 hover:border-zinc-300 hover:text-zinc-600'
-                }`}
-              >
-                <span className="ml-2 text-lg">{cat.icon}</span>
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <button type="button" onClick={goHome} className="flex items-center gap-2 hover:opacity-90 transition-opacity" title="بازگشت به صفحه اصلی">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl">🍔</div>
+          <span className="text-amber-500 font-black text-lg tracking-tight">Fast Foodio</span>
+        </button>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 mb-28">
-        {/* Special Promo */}
-        <div className="mb-12 rounded-[2.5rem] overflow-hidden relative h-60 bg-black group cursor-pointer shadow-2xl shadow-black/10">
-           <img 
-             src="/images/promo-1.jpg" 
-             className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-[2s]" 
-             alt="Promo"
-           />
-           <div className="absolute inset-0 bg-gradient-to-l from-black via-black/40 to-transparent"></div>
-           <div className="z-10 relative h-full flex flex-col justify-center p-12">
-              <div className="bg-yellow-400 text-black text-[10px] font-black px-3 py-1.5 rounded-full w-fit mb-4 uppercase tracking-tighter">پیشنهاد ویژه</div>
-              <h2 className="text-5xl font-black mb-3 leading-tight text-white tracking-tighter">پارتی باکس!<br/>ویژه آخر هفته</h2>
-              <div className="flex items-center gap-3 text-yellow-400 group-hover:translate-x-[-10px] transition-transform duration-500">
-                <span className="font-black text-xl underline decoration-4 underline-offset-8">همین حالا سفارش دهید</span>
-                <ArrowRight className="rotate-180" />
-              </div>
-           </div>
-        </div>
-
-        {/* Product Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-4">
-               <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-2xl">
-                 {categories.find(c => c.id === selectedCategory)?.icon}
-               </div>
-               <h2 className="text-3xl font-black tracking-tight">{categories.find(c => c.id === selectedCategory)?.name}</h2>
-            </div>
-            <div className="text-sm text-zinc-400 font-black bg-white px-4 py-2 rounded-xl shadow-sm border border-zinc-100">{filteredProducts.length} محصول</div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filteredProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAdd={() => addToCart(product)} 
-                quantity={cart.find(i => i.id === product.id)?.quantity || 0}
-                onRemove={() => removeFromCart(product.id)}
-              />
-            ))}
-          </div>
-
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-zinc-200">
-               <div className="text-8xl mb-6 grayscale opacity-30">🍔</div>
-               <h3 className="text-2xl font-black text-zinc-800">اینجا چیزی نیست!</h3>
-               <p className="text-zinc-400 text-lg font-medium mt-2">لطفاً کلمه دیگری را جستجو کنید</p>
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Floating Checkout (Mobile) */}
-      {totalItems > 0 && (
-        <div className="fixed bottom-8 left-6 right-6 z-40 md:hidden">
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="w-full bg-black text-white rounded-[2rem] p-5 flex items-center justify-between shadow-2xl transform active:scale-95 transition-all border border-white/5"
+      {/* هیرو قرمز با تصاویر غذا + باکس شعبه */}
+      <div className="relative w-full h-44 md:h-52 shrink-0 overflow-hidden bg-red-600">
+        <img src="/images/burger-3.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+        <img src="/images/fries-1.jpg" alt="" className="absolute left-1/4 top-0 w-1/4 h-1/2 object-cover opacity-90 rounded-lg" />
+        <div className="absolute inset-0 bg-red-600/70" />
+        {/* باکس اطلاعات شعبه - گوشه راست */}
+        <div className="absolute top-4 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
+          <h3 className="font-black text-zinc-800 text-lg">{selectedBranch?.name ?? 'شعبه'}</h3>
+          <p className="text-amber-600 font-bold text-sm mt-1">تا ۱۵٪ تخفیف</p>
+          <p className="text-zinc-500 text-xs mt-2">آدرس: {selectedBranch?.address ?? ''}</p>
+          <button
+            type="button"
+            onClick={goToBranches}
+            className="mt-3 w-full flex items-center justify-center gap-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-2 rounded-xl text-sm font-bold transition-colors"
           >
-            <div className="flex items-center gap-4">
-              <div className="bg-yellow-400 text-black font-black rounded-xl px-3 py-1.5 text-sm">
-                {totalItems}
+            تغییر شعبه
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          <div className="mt-2 flex items-center gap-2 text-green-600">
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-xs font-bold">سفارش می‌پذیریم</span>
+          </div>
+        </div>
+      </div>
+
+      {/* تب‌ها: منوی سفارش | اطلاعات رستوران */}
+      <div className="bg-white border-b border-zinc-200 px-4 md:px-6 flex gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => setOrderTab('menu')}
+          className={`py-3 px-4 font-bold text-sm border-b-2 transition-colors ${orderTab === 'menu' ? 'border-red-500 text-red-600' : 'border-transparent text-zinc-500 hover:text-zinc-700'}`}
+        >
+          منوی سفارش
+        </button>
+        <button
+          type="button"
+          onClick={() => setOrderTab('info')}
+          className={`py-3 px-4 font-bold text-sm border-b-2 transition-colors ${orderTab === 'info' ? 'border-red-500 text-red-600' : 'border-transparent text-zinc-500 hover:text-zinc-700'}`}
+        >
+          اطلاعات رستوران
+        </button>
+      </div>
+
+      {orderTab === 'info' ? (
+        <main className="flex-1 p-6 bg-zinc-50">
+          <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-8">
+            <h2 className="font-black text-xl text-zinc-800 mb-4">{selectedBranch?.name ?? 'شعبه'}</h2>
+            <p className="text-zinc-600 text-sm leading-relaxed">{selectedBranch?.address ?? ''}</p>
+            <div className="mt-4 flex items-center gap-2 text-green-600">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-sm font-bold">سفارش می‌پذیریم</span>
+            </div>
+          </div>
+        </main>
+      ) : (
+        <div className="flex-1 flex">
+          {/* ستون راست: هدر و هیرو و تب با اسکرول از صفحه خارج می‌شوند؛ فقط نوار دسته‌ها به بالای صفحه می‌چسبد */}
+          <main className="flex-1 min-w-0 p-4 md:p-6">
+            {/* نوار دسته‌ها + جستجو: با رسیدن به بالا به viewport می‌چسبد، همیشه در دسترس */}
+            <div className="sticky top-0 z-20 bg-zinc-100 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 pt-px shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {categories.map((cat) => {
+                  const isActive = visibleCategoryId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
+                        isActive
+                          ? 'bg-white border-red-500 text-red-600 shadow-sm'
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'
+                      } ${isActive ? 'ring-2 ring-red-500/30' : ''}`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className={isActive ? 'font-black' : ''}>{cat.name}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <span className="font-black text-lg">سبد خرید</span>
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="جستجوی سریع"
+                  className="w-full bg-white border border-zinc-200 rounded-xl py-2.5 pr-10 pl-4 text-sm outline-none focus:border-red-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="font-black text-xl">
-              {cartTotal.toLocaleString()} <span className="text-xs font-normal opacity-50 mr-1">تومان</span>
+
+            {/* دسته‌ها پشت‌سرهم — اسکرول صفحه؛ کارت‌ها از زیر نوار دسته‌ها رد می‌شوند */}
+            <div className="space-y-8 pt-4">
+              {productsByCategory.map(({ category, products: catProducts }) => {
+                if (catProducts.length === 0) return null;
+                return (
+                  <section key={category.id} id={`cat-${category.id}`} className="scroll-mt-28">
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="font-black text-zinc-800 text-lg flex items-center gap-2">
+                        <span>{category.icon}</span>
+                        {category.name}
+                      </h2>
+                      <button type="button" className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-100" aria-label="اشتراک">
+                        <Share2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {catProducts.map((product, index) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onAdd={() => addToCart(product)}
+                          quantity={cart.find(i => i.id === product.id)?.quantity || 0}
+                          onRemove={() => removeFromCart(product.id)}
+                          showNewBadge={index < 2}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+              {productsByCategory.every(({ products: p }) => p.length === 0) && (
+                <div className="text-center py-16 text-zinc-500 font-medium">محصولی یافت نشد.</div>
+              )}
             </div>
+          </main>
+
+          {/* ستون چپ: سبد خرید — با اسکرول به بالا می‌چسبد و از دید خارج نمی‌شود */}
+          <aside className="hidden md:flex md:w-72 lg:w-80 md:shrink-0 md:sticky md:top-0 md:self-start md:max-h-screen md:flex-col bg-white border-r border-zinc-200 shadow-[-4px_0_12px_rgba(0,0,0,0.06)] z-10">
+            <div className="p-4 border-b border-zinc-100 shrink-0">
+              <h2 className="font-black text-zinc-800 text-lg">سبد خرید</h2>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-4">
+              {cart.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-24 h-24 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
+                    <ShoppingCart className="w-12 h-12 text-zinc-300" />
+                  </div>
+                  <p className="text-zinc-500 font-medium">سبد خرید خالی است</p>
+                </div>
+              ) : (
+                <>
+                  <ul className="space-y-4">
+                    {cart.map((item) => (
+                      <li key={item.id} className="flex gap-3">
+                        <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-zinc-800 text-sm truncate">{item.name}</p>
+                          <p className="text-zinc-500 text-xs">{(item.price * item.quantity).toLocaleString()} تومان</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <button type="button" onClick={() => removeFromCart(item.id)} className="w-7 h-7 rounded bg-zinc-100 flex items-center justify-center text-zinc-600 hover:bg-zinc-200">
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
+                            <button type="button" onClick={() => addToCart(item)} className="w-7 h-7 rounded bg-zinc-100 flex items-center justify-center text-zinc-600 hover:bg-zinc-200">
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 pt-4 border-t border-zinc-100 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-500">جمع کل</span>
+                      <span className="font-bold">{cartTotal.toLocaleString()} تومان</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full mt-3 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-sm transition-colors"
+                    >
+                      تکمیل سفارش
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* سبد خرید موبایل: دکمه شناور */}
+      {orderTab === 'menu' && (
+        <div className="md:hidden fixed bottom-4 left-4 right-4 z-40">
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="w-full bg-white border-2 border-zinc-200 rounded-2xl py-4 px-4 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-6 h-6 text-zinc-600" />
+              <span className="font-bold text-zinc-800">سبد خرید</span>
+              {totalItems > 0 && (
+                <span className="bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">{totalItems}</span>
+              )}
+            </div>
+            {totalItems > 0 ? (
+              <span className="font-black text-zinc-800">{cartTotal.toLocaleString()} تومان</span>
+            ) : (
+              <span className="text-zinc-400 text-sm">خالی</span>
+            )}
           </button>
         </div>
       )}
 
-      {/* Cart Drawer */}
+      {/* دراور سبد خرید موبایل */}
       {isCartOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex justify-end transition-opacity duration-500">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-500 ease-out">
-            <div className="p-8 border-b flex items-center justify-between bg-zinc-50/50">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setIsCartOpen(false)} className="p-3 hover:bg-zinc-200 rounded-2xl transition-all active:scale-90">
-                  <X size={28} />
-                </button>
-                <h2 className="text-3xl font-black tracking-tight">سبد خرید شما</h2>
-              </div>
-              <span className="bg-black text-white font-black px-4 py-1.5 rounded-2xl text-xs uppercase tracking-widest">{totalItems} مورد</span>
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsCartOpen(false)} />
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-2xl flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="font-black text-lg">سبد خرید</h2>
+              <button type="button" onClick={() => setIsCartOpen(false)} className="p-2">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4">
               {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-8 p-12">
-                  <div className="w-48 h-48 bg-zinc-100 rounded-full flex items-center justify-center text-8xl shadow-inner animate-pulse">
-                    🛍️
-                  </div>
-                  <div>
-                    <h3 className="font-black text-3xl mb-4">سبد خریدت خالیه!</h3>
-                    <p className="text-zinc-400 text-lg font-medium leading-relaxed">بهترین برگرهای شهر منتظر تواَن. همین حالا اولین آیتم رو اضافه کن.</p>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <ShoppingCart className="w-16 h-16 text-zinc-300 mb-4" />
+                  <p className="text-zinc-500 font-medium">سبد خرید خالی است</p>
                 </div>
               ) : (
                 <>
-                  <div className="space-y-8">
-                    {cart.map((item) => (
-                      <div key={item.id} className="flex gap-6 group animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="relative w-32 h-32 flex-shrink-0">
-                          <img src={item.image} alt={item.name} className="w-full h-full rounded-[2rem] object-cover shadow-lg group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                        <div className="flex-1 py-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-black text-2xl group-hover:text-yellow-600 transition-colors">{item.name}</h4>
-                            <div className="font-black text-lg text-zinc-900">
-                              {(item.price * item.quantity).toLocaleString()} <span className="text-xs opacity-40 font-normal mr-1">تومان</span>
-                            </div>
-                          </div>
-                          <p className="text-sm text-zinc-400 mt-1 line-clamp-1 font-medium">{item.description}</p>
-                          <div className="flex items-center justify-start mt-4">
-                            <div className="flex items-center gap-5 bg-zinc-100 rounded-2xl px-3 py-1.5 shadow-inner">
-                              <button onClick={() => addToCart(item)} className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-yellow-600 shadow-sm hover:bg-yellow-50 active:scale-90 transition-all">
-                                <Plus size={20} />
-                              </button>
-                              <span className="font-black text-lg w-6 text-center">{item.quantity}</span>
-                              <button onClick={() => removeFromCart(item.id)} className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-zinc-400 shadow-sm hover:text-red-500 active:scale-90 transition-all">
-                                <Minus size={20} />
-                              </button>
-                            </div>
-                          </div>
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex gap-3 py-3 border-b border-zinc-100">
+                      <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm">{item.name}</p>
+                        <p className="text-zinc-500 text-xs">{(item.price * item.quantity).toLocaleString()} تومان</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <button type="button" onClick={() => removeFromCart(item.id)} className="w-8 h-8 rounded bg-zinc-100 flex items-center justify-center"><Minus className="w-4 h-4" /></button>
+                          <span className="font-bold w-6 text-center">{item.quantity}</span>
+                          <button type="button" onClick={() => addToCart(item)} className="w-8 h-8 rounded bg-zinc-100 flex items-center justify-center"><Plus className="w-4 h-4" /></button>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between font-bold mb-3">جمع کل <span>{cartTotal.toLocaleString()} تومان</span></div>
+                    <button type="button" className="w-full bg-red-600 text-white py-3 rounded-xl font-bold">تکمیل سفارش</button>
                   </div>
-                  )
                 </>
               )}
-            </div>
-
-            {/* Cart Summary */}
-            <div className="p-8 bg-zinc-50 border-t border-zinc-100">
-              <div className="space-y-4 mb-10 bg-white p-8 rounded-[2.5rem] shadow-sm border border-zinc-100">
-                <div className="flex justify-between text-sm font-bold">
-                  <span className="text-zinc-400">جمع کل</span>
-                  <span className="text-zinc-900">{cartTotal.toLocaleString()} تومان</span>
-                </div>
-                <div className="flex justify-between text-sm font-bold">
-                  <span className="text-zinc-400">هزینه ارسال</span>
-                  <span className="text-green-600 font-black tracking-widest uppercase">رایگان</span>
-                </div>
-                <div className="h-[2px] bg-zinc-50 my-2"></div>
-                <div className="flex justify-between text-3xl font-black tracking-tighter">
-                  <span>قابل پرداخت</span>
-                  <span className="text-black">{cartTotal.toLocaleString()} <span className="text-sm font-normal opacity-40">تومان</span></span>
-                </div>
-              </div>
-
-              <button 
-                disabled={cart.length === 0}
-                className="w-full bg-black text-white py-6 rounded-[2rem] font-black text-2xl flex items-center justify-center gap-5 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed transform active:scale-[0.98] transition-all shadow-2xl shadow-black/20"
-              >
-                تکمیل و پرداخت نهایی
-                <ArrowRight size={28} className="transform rotate-180" />
-              </button>
             </div>
           </div>
         </div>
@@ -532,60 +606,62 @@ const goToBranches = () => {
 };
 
 /**
- * کامپوننت کارت محصول جهت نمایش اطلاعات هر کالا
- * شامل تصویر، نام، قیمت و عملیات افزودن/حذف به سبد خرید
+ * کارت محصول ساده: تصویر با هاور (نام + توضیح)، نام و قیمت با فونت کوچک، دکمه افزودن
  */
-// Reusable Product Card Component
-const ProductCard: React.FC<{ 
-  product: Product, 
-  onAdd: () => void, 
-  quantity: number,
-  onRemove: () => void
-}> = ({ product, onAdd, quantity, onRemove }) => {
+const ProductCard: React.FC<{
+  product: Product;
+  onAdd: () => void;
+  quantity: number;
+  onRemove: () => void;
+  showNewBadge?: boolean;
+}> = ({ product, onAdd, quantity, onRemove, showNewBadge = false }) => {
   return (
-    <div className="group bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-2xl transition-all duration-700 border border-zinc-100 flex flex-col h-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-      <div className="relative mb-6 rounded-[2rem] overflow-hidden aspect-[4/3]">
-        <img 
-          src={product.image} 
-          alt={product.name} 
+    <div className="group bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-2xl transition-all duration-700 border border-zinc-100 flex flex-col h-full relative overflow-hidden">
+      <div className="relative mb-4 rounded-[2rem] overflow-hidden aspect-[4/3]">
+        <img
+          src={product.image}
+          alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        {/* هاور روی تصویر: نام و توضیحات محصول */}
+        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+          <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{product.name}</h3>
+          <p className="text-white/90 text-xs leading-relaxed line-clamp-3">{product.description}</p>
+        </div>
+        {showNewBadge && (
+          <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-xl shadow-md z-10">
+            NEW
+          </span>
+        )}
         {quantity > 0 && (
-          <div className="absolute top-4 right-4 bg-yellow-400 text-black px-4 py-1.5 rounded-2xl text-xs font-black shadow-2xl animate-in zoom-in duration-300">
+          <div className="absolute top-4 right-4 bg-amber-500 text-black px-4 py-1.5 rounded-2xl text-xs font-black shadow-xl z-10">
             {quantity} در سبد
           </div>
         )}
       </div>
 
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-black text-2xl group-hover:text-yellow-600 transition-colors tracking-tight">{product.name}</h3>
-          <div className="flex items-center text-xs bg-zinc-50 text-zinc-600 px-3 py-1.5 rounded-xl font-black border border-zinc-100 shadow-inner">
-            <Star size={14} className="fill-yellow-400 text-yellow-400 mr-1.5" />
-            ۴.۸
-          </div>
-        </div>
-        <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2 mb-8 min-h-[3rem] font-medium italic">
-          {product.description}
-        </p>
+      <div className="flex-1 min-h-0">
+        <h3 className="font-bold text-zinc-800 text-sm line-clamp-2 leading-snug">{product.name}</h3>
       </div>
 
-      <div className="flex items-center justify-between pt-6 border-t border-zinc-50 mt-auto">
-        <div className="font-black text-2xl tracking-tighter">
-          {product.price.toLocaleString()} <span className="text-xs font-normal text-zinc-400 mr-1">تومان</span>
+      <div className="flex items-center justify-between pt-4 border-t border-zinc-50 mt-auto">
+        <div className="font-bold text-xs text-zinc-700">
+          {product.price.toLocaleString()} <span className="text-zinc-400 font-normal mr-1">تومان</span>
         </div>
-        
+
         {quantity > 0 ? (
           <div className="flex items-center gap-4 bg-zinc-100 rounded-[1.5rem] px-2.5 py-1.5 shadow-inner transition-all transform scale-110">
-             <button 
+            <button
+              type="button"
               onClick={onAdd}
               className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-yellow-600 shadow-md hover:bg-yellow-50 active:scale-90 transition-all"
             >
               <Plus size={20} />
             </button>
             <span className="font-black text-lg min-w-[1.5rem] text-center">{quantity}</span>
-            <button 
+            <button
+              type="button"
               onClick={onRemove}
               className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-zinc-400 shadow-md hover:text-red-500 active:scale-90 transition-all"
             >
@@ -593,7 +669,8 @@ const ProductCard: React.FC<{
             </button>
           </div>
         ) : (
-          <button 
+          <button
+            type="button"
             onClick={onAdd}
             className="bg-black text-white p-4 rounded-[1.5rem] hover:bg-yellow-400 hover:text-black transition-all duration-500 transform active:scale-90 shadow-xl shadow-black/5 group-hover:rotate-12"
           >
