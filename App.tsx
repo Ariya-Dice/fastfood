@@ -92,24 +92,46 @@ const [visibleCategoryId, setVisibleCategoryId] = useState<string>(categories[0]
   // با اسکرول، دستهٔ در حال نمایش را برای هایلایت دکمه به‌روز کن
   useEffect(() => {
     if (orderTab !== 'menu') return;
-    const sectionIds = productsByCategory.filter(({ products: p }) => p.length > 0).map(({ category }) => category.id);
+    const sectionIds = productsByCategory
+      .filter(({ products: p }) => p.length > 0)
+      .map(({ category }) => category.id);
     if (sectionIds.length === 0) return;
+
     const observed: Element[] = [];
-    const obs = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          const id = (e.target as HTMLElement).id.replace('cat-', '');
-          if (id) setVisibleCategoryId(id);
-        });
+        // انتخاب بخشی که بیشترین سطح دید را دارد تا هایلایت دسته دقیق‌تر باشد
+        const visibleEntries = entries.filter((entry) => entry.isIntersecting);
+        if (!visibleEntries.length) return;
+
+        const mostVisible = visibleEntries.reduce((prev, curr) =>
+          curr.intersectionRatio > prev.intersectionRatio ? curr : prev
+        );
+        const id = (mostVisible.target as HTMLElement).id.replace('cat-', '');
+        if (id) {
+          setVisibleCategoryId((prev) => (prev === id ? prev : id));
+        }
       },
-      { root: null, rootMargin: '-100px 0px -65% 0px', threshold: 0 }
+      {
+        root: null,
+        // توجه به نوار چسبان بالای صفحه
+        rootMargin: '-80px 0px -40% 0px',
+        threshold: [0.25, 0.5, 0.75],
+      }
     );
+
     sectionIds.forEach((id) => {
       const el = document.getElementById(`cat-${id}`);
-      if (el) { obs.observe(el); observed.push(el); }
+      if (el) {
+        observer.observe(el);
+        observed.push(el);
+      }
     });
-    return () => { observed.forEach((el) => obs.unobserve(el)); };
+
+    return () => {
+      observed.forEach((el) => observer.unobserve(el));
+      observer.disconnect();
+    };
   }, [orderTab, searchQuery]);
 
   /**
@@ -357,8 +379,8 @@ const goToBranches = () => {
         <img src="/images/burger-3.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
         <img src="/images/fries-1.jpg" alt="" className="absolute left-1/4 top-0 w-1/4 h-1/2 object-cover opacity-90 rounded-lg" />
         <div className="absolute inset-0 bg-red-600/70" />
-        {/* باکس اطلاعات شعبه - گوشه راست */}
-        <div className="absolute top-4 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
+        {/* باکس اطلاعات شعبه - گوشه راست با فاصله مناسب از هدر */}
+        <div className="absolute top-100 md:top-15 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
           <h3 className="font-black text-zinc-800 text-lg">{selectedBranch?.name ?? 'شعبه'}</h3>
           <p className="text-amber-600 font-bold text-sm mt-1">تا ۱۵٪ تخفیف</p>
           <p className="text-zinc-500 text-xs mt-2">آدرس: {selectedBranch?.address ?? ''}</p>
