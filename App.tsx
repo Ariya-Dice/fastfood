@@ -50,16 +50,8 @@ const [isLoading, setIsLoading] = useState(true);
 const [orderTab, setOrderTab] = useState<'menu' | 'info'>('menu');
   // دسته‌ای که الان در view است (برای هایلایت دکمه با اسکرول)
 const [visibleCategoryId, setVisibleCategoryId] = useState<string>(categories[0].id);
-// حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
-// حذف پیشنهاد هوشمند Gemini به درخواست کارفرما
-
-  // محاسبه محصولات فیلترشده با توجه به دسته‌بندی و جستجو (برای هایلایت دسته)
-  const filteredProducts = useMemo(() => {
-    return products.filter(p =>
-      (p.category === selectedCategory) &&
-      (p.name.includes(searchQuery) || p.description.includes(searchQuery))
-    );
-  }, [selectedCategory, searchQuery]);
+  const categoryNavRef = useRef<HTMLDivElement>(null);
+  const isScrollingFromClick = useRef(false);
 
   // گروه‌بندی محصولات بر اساس دسته برای اسکرول یکپارچه (همه دسته‌ها پشت‌سرهم)
   const productsByCategory = useMemo(() => {
@@ -84,9 +76,14 @@ const [visibleCategoryId, setVisibleCategoryId] = useState<string>(categories[0]
   // با کلیک روی دسته، اسکرول به همان بخش و هایلایت همان دسته
   useEffect(() => {
     if (orderTab !== 'menu') return;
+    isScrollingFromClick.current = true;
+    setVisibleCategoryId(selectedCategory);
     const el = document.getElementById(`cat-${selectedCategory}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setVisibleCategoryId(selectedCategory);
+    const timer = window.setTimeout(() => {
+      isScrollingFromClick.current = false;
+    }, 700);
+    return () => window.clearTimeout(timer);
   }, [selectedCategory, orderTab]);
 
   // با اسکرول، دستهٔ در حال نمایش را برای هایلایت دکمه به‌روز کن
@@ -97,42 +94,31 @@ const [visibleCategoryId, setVisibleCategoryId] = useState<string>(categories[0]
       .map(({ category }) => category.id);
     if (sectionIds.length === 0) return;
 
-    const observed: Element[] = [];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // انتخاب بخشی که بیشترین سطح دید را دارد تا هایلایت دسته دقیق‌تر باشد
-        const visibleEntries = entries.filter((entry) => entry.isIntersecting);
-        if (!visibleEntries.length) return;
+    const updateVisibleCategory = () => {
+      if (isScrollingFromClick.current) return;
 
-        const mostVisible = visibleEntries.reduce((prev, curr) =>
-          curr.intersectionRatio > prev.intersectionRatio ? curr : prev
-        );
-        const id = (mostVisible.target as HTMLElement).id.replace('cat-', '');
-        if (id) {
-          setVisibleCategoryId((prev) => (prev === id ? prev : id));
+      const offset = categoryNavRef.current
+        ? categoryNavRef.current.getBoundingClientRect().bottom + 8
+        : 140;
+
+      let activeId = sectionIds[0];
+      for (const id of sectionIds) {
+        const el = document.getElementById(`cat-${id}`);
+        if (el && el.getBoundingClientRect().top <= offset) {
+          activeId = id;
         }
-      },
-      {
-        root: null,
-        // توجه به نوار چسبان بالای صفحه
-        rootMargin: '-80px 0px -40% 0px',
-        threshold: [0.25, 0.5, 0.75],
       }
-    );
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(`cat-${id}`);
-      if (el) {
-        observer.observe(el);
-        observed.push(el);
-      }
-    });
-
-    return () => {
-      observed.forEach((el) => observer.unobserve(el));
-      observer.disconnect();
+      setVisibleCategoryId((prev) => (prev === activeId ? prev : activeId));
     };
-  }, [orderTab, searchQuery]);
+
+    updateVisibleCategory();
+    window.addEventListener('scroll', updateVisibleCategory, { passive: true });
+    window.addEventListener('resize', updateVisibleCategory, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', updateVisibleCategory);
+      window.removeEventListener('resize', updateVisibleCategory);
+    };
+  }, [orderTab, searchQuery, productsByCategory]);
 
   /**
  * افزودن محصول به سبد خرید
@@ -216,7 +202,7 @@ const goToBranches = () => {
         {/* Navigation */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div className="text-3xl font-black text-yellow-400 tracking-tighter">FASTFOODIO</div>
+            <div className="text-3xl font-black text-yellow-400 tracking-tighter">FASTFOOD</div>
             <div className="hidden md:flex gap-10 text-sm font-black uppercase tracking-widest">
               <a href="#" className="hover:text-yellow-400 transition-colors">منو</a>
               <a href="#" onClick={goToBranches} className="hover:text-yellow-400 transition-colors">شعب ما</a>
@@ -233,13 +219,13 @@ const goToBranches = () => {
         <header className="relative h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
-              src="/images/burger-3.jpg" 
+              src="/images/promo-1.jpg" 
               className="w-full h-full object-cover opacity-70 scale-100 transition-transform duration-[10s] hover:scale-110"
               alt="Hero Burger"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
           </div>
-          <div className="z-10 text-center px-4 max-w-4xl animate-in fade-in slide-in-from-bottom-12 duration-1000">
+          <div className="z-10 text-center px-4 max-w-4xl opacity-0 animate-fade-in">
             <h1 className="text-6xl md:text-9xl font-black mb-8 tracking-tighter leading-none">
               طعم واقعی <br/> <span className="text-yellow-400">برگر</span> دست‌ساز
             </h1>
@@ -260,12 +246,12 @@ const goToBranches = () => {
         {/* Footer */}
         <footer className="bg-black py-20 border-t border-white/5">
            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12">
-              <div className="text-4xl font-black text-yellow-400 tracking-tighter">FASTFOODIO</div>
+              <div className="text-4xl font-black text-yellow-400 tracking-tighter">FASTFOOD</div>
               <div className="flex gap-10">
                 <Instagram size={32} className="cursor-pointer hover:text-yellow-400 transition-colors" />
                 <Phone size={32} className="cursor-pointer hover:text-yellow-400 transition-colors" />
               </div>
-              <p className="text-zinc-500 font-bold">© ۲۰۲۴ تمامی حقوق برای فست‌فودیـو محفوظ است.</p>
+              <p className="text-zinc-500 font-bold">© ۲۰۲۴ تمامی حقوق برای فست‌فود محفوظ است.</p>
            </div>
         </footer>
       </div>
@@ -282,7 +268,7 @@ const goToBranches = () => {
         {/* پس‌زمینه تار شده */}
         <div className="fixed inset-0 z-0">
           <img
-            src="/images/restaurant-1.jpg"
+            src="/images/promo-1.jpg"
             alt=""
             className="w-full h-full object-cover"
           />
@@ -339,7 +325,7 @@ const goToBranches = () => {
             <Instagram size={24} strokeWidth={1.5} />
           </a>
           <p className="text-xs md:text-sm font-medium">
-            © حقوق مادی و معنوی متعلق به FASTFOODIO است.
+            © حقوق مادی و معنوی متعلق به FASTFOOD است.
           </p>
         </footer>
       </div>
@@ -376,11 +362,11 @@ const goToBranches = () => {
 
       {/* هیرو قرمز با تصاویر غذا + باکس شعبه */}
       <div className="relative w-full h-44 md:h-52 shrink-0 overflow-hidden bg-red-600">
-        <img src="/images/burger-3.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+        <img src="/images/promo-1.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
         <img src="/images/fries-1.jpg" alt="" className="absolute left-1/4 top-0 w-1/4 h-1/2 object-cover opacity-90 rounded-lg" />
         <div className="absolute inset-0 bg-red-600/70" />
         {/* باکس اطلاعات شعبه - گوشه راست با فاصله مناسب از هدر */}
-        <div className="absolute top-100 md:top-15 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
+        <div className="absolute top-24 md:top-16 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
           <h3 className="font-black text-zinc-800 text-lg">{selectedBranch?.name ?? 'شعبه'}</h3>
           <p className="text-amber-600 font-bold text-sm mt-1">تا ۱۵٪ تخفیف</p>
           <p className="text-zinc-500 text-xs mt-2">آدرس: {selectedBranch?.address ?? ''}</p>
@@ -433,7 +419,7 @@ const goToBranches = () => {
           {/* ستون راست: هدر و هیرو و تب با اسکرول از صفحه خارج می‌شوند؛ فقط نوار دسته‌ها به بالای صفحه می‌چسبد */}
           <main className="flex-1 min-w-0 p-4 md:p-6">
             {/* نوار دسته‌ها + جستجو: با رسیدن به بالا به viewport می‌چسبد، همیشه در دسترس */}
-            <div className="sticky top-0 z-20 bg-zinc-100 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 pt-px shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+            <div ref={categoryNavRef} className="sticky top-0 z-20 bg-zinc-100 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 pt-px shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
               <div className="flex flex-wrap gap-2 mb-4">
                 {categories.map((cat) => {
                   const isActive = visibleCategoryId === cat.id;
@@ -638,8 +624,8 @@ const ProductCard: React.FC<{
   showNewBadge?: boolean;
 }> = ({ product, onAdd, quantity, onRemove, showNewBadge = false }) => {
   return (
-    <div className="group bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-2xl transition-all duration-700 border border-zinc-100 flex flex-col h-full relative overflow-hidden">
-      <div className="relative mb-4 rounded-[2rem] overflow-hidden aspect-[4/3]">
+    <div className="group bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-2xl transition-all duration-700 border border-zinc-100 flex flex-col h-full relative overflow-hidden">
+      <div className="relative mb-2 sm:mb-4 rounded-xl sm:rounded-2xl lg:rounded-[2rem] overflow-hidden aspect-[4/3]">
         <img
           src={product.image}
           alt={product.name}
@@ -657,7 +643,7 @@ const ProductCard: React.FC<{
           </span>
         )}
         {quantity > 0 && (
-          <div className="absolute top-4 right-4 bg-amber-500 text-black px-4 py-1.5 rounded-2xl text-xs font-black shadow-xl z-10">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-amber-500 text-black px-2 py-0.5 sm:px-4 sm:py-1.5 rounded-lg sm:rounded-2xl text-[10px] sm:text-xs font-black shadow-xl z-10">
             {quantity} در سبد
           </div>
         )}
@@ -667,36 +653,42 @@ const ProductCard: React.FC<{
         <h3 className="font-bold text-zinc-800 text-sm line-clamp-2 leading-snug">{product.name}</h3>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-zinc-50 mt-auto">
-        <div className="font-bold text-xs text-zinc-700">
-          {product.price.toLocaleString()} <span className="text-zinc-400 font-normal mr-1">تومان</span>
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-3 sm:pt-4 border-t border-zinc-50 mt-auto min-w-0">
+        <div className="font-bold text-[10px] sm:text-xs text-zinc-700 min-w-0 shrink leading-tight">
+          {product.price.toLocaleString()}{' '}
+          <span className="text-zinc-400 font-normal">تومان</span>
         </div>
 
         {quantity > 0 ? (
-          <div className="flex items-center gap-4 bg-zinc-100 rounded-[1.5rem] px-2.5 py-1.5 shadow-inner transition-all transform scale-110">
+          <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-2 bg-zinc-100 rounded-lg sm:rounded-xl md:rounded-[1.5rem] px-1 py-0.5 sm:px-2 sm:py-1 md:px-2.5 md:py-1.5 shadow-inner shrink-0">
             <button
               type="button"
               onClick={onAdd}
-              className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-yellow-600 shadow-md hover:bg-yellow-50 active:scale-90 transition-all"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center bg-white rounded-md sm:rounded-lg md:rounded-xl text-yellow-600 shadow-md hover:bg-yellow-50 active:scale-90 transition-all"
+              aria-label="افزایش تعداد"
             >
-              <Plus size={20} />
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             </button>
-            <span className="font-black text-lg min-w-[1.5rem] text-center">{quantity}</span>
+            <span className="font-black text-sm sm:text-base md:text-lg w-5 sm:w-6 md:min-w-[1.5rem] text-center tabular-nums">
+              {quantity}
+            </span>
             <button
               type="button"
               onClick={onRemove}
-              className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-zinc-400 shadow-md hover:text-red-500 active:scale-90 transition-all"
+              className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center bg-white rounded-md sm:rounded-lg md:rounded-xl text-zinc-400 shadow-md hover:text-red-500 active:scale-90 transition-all"
+              aria-label="کاهش تعداد"
             >
-              <Minus size={20} />
+              <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
             </button>
           </div>
         ) : (
           <button
             type="button"
             onClick={onAdd}
-            className="bg-black text-white p-4 rounded-[1.5rem] hover:bg-yellow-400 hover:text-black transition-all duration-500 transform active:scale-90 shadow-xl shadow-black/5 group-hover:rotate-12"
+            className="bg-black text-white p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-[1.5rem] hover:bg-yellow-400 hover:text-black transition-all duration-500 transform active:scale-90 shadow-xl shadow-black/5 shrink-0 group-hover:rotate-12"
+            aria-label="افزودن به سبد"
           >
-            <Plus size={30} />
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
           </button>
         )}
       </div>
