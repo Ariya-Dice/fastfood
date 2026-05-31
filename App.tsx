@@ -366,7 +366,7 @@ const goToBranches = () => {
         <img src="/images/fries-1.jpg" alt="" className="absolute left-1/4 top-0 w-1/4 h-1/2 object-cover opacity-90 rounded-lg" />
         <div className="absolute inset-0 bg-red-600/70" />
         {/* باکس اطلاعات شعبه - گوشه راست با فاصله مناسب از هدر */}
-        <div className="absolute top-24 md:top-4 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
+        <div className="absolute top-0 md:top-4 right-4 left-4 md:left-auto md:w-72 bg-white rounded-2xl shadow-xl p-4">
           <h3 className="font-black text-zinc-800 text-lg">{selectedBranch?.name ?? 'شعبه'}</h3>
           <p className="text-amber-600 font-bold text-sm mt-1">تا ۱۵٪ تخفیف</p>
           <p className="text-zinc-500 text-xs mt-2">آدرس: {selectedBranch?.address ?? ''}</p>
