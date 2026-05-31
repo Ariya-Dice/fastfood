@@ -11,7 +11,6 @@ import {
   ChevronDown,
   Share2,
 } from 'lucide-react';
-import Offcanvas from 'react-bootstrap/Offcanvas';
 import { categories, products, branches, Branch } from './data/mockData';
 import { Product, CartItem } from './types';
 import LoadingSpinner from './LoadingSpinner';
@@ -140,478 +139,417 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const renderCartItems = () => (
-    <>
-      <ul className="list-unstyled mb-0">
-        {cart.map((item) => (
-          <li key={item.id} className="d-flex gap-3 mb-3">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="rounded object-fit-cover flex-shrink-0"
-              style={{ width: 56, height: 56 }}
-            />
-            <div className="flex-grow-1 min-w-0">
-              <p className="fw-bold text-dark mb-0 small text-truncate">{item.name}</p>
-              <p className="text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                {(item.price * item.quantity).toLocaleString()} تومان
-              </p>
-              <div className="qty-control d-inline-flex">
-                <button
-                  type="button"
-                  className="qty-btn remove"
-                  onClick={() => removeFromCart(item.id)}
-                  aria-label="کاهش"
-                >
-                  <Minus size={14} />
-                </button>
-                <span className="fw-bold text-center" style={{ width: 24 }}>
-                  {item.quantity}
-                </span>
-                <button
-                  type="button"
-                  className="qty-btn"
-                  onClick={() => addToCart(item)}
-                  aria-label="افزایش"
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="border-top pt-3 mt-3">
-        <div className="d-flex justify-content-between mb-3">
-          <span className="text-muted small">جمع کل</span>
-          <span className="fw-bold">{cartTotal.toLocaleString()} تومان</span>
-        </div>
-        <button type="button" className="btn btn-brand-red w-100 rounded-3 py-2">
-          تکمیل سفارش
-        </button>
-      </div>
-    </>
-  );
-
-  const renderEmptyCart = () => (
-    <div className="d-flex flex-column align-items-center justify-content-center py-5 text-center">
-      <div
-        className="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3"
-        style={{ width: 96, height: 96 }}
-      >
-        <ShoppingCart size={48} className="text-secondary opacity-50" />
-      </div>
-      <p className="text-muted fw-medium mb-0">سبد خرید خالی است</p>
-    </div>
-  );
-
   if (isLoading) {
     return (
-      <div className="min-vh-100 bg-light d-flex align-items-center justify-content-center">
+      <div className="ff-loading-screen ff-font">
         <LoadingSpinner />
       </div>
     );
   }
 
-  /* ─── HOME VIEW ─── */
   if (view === 'home') {
     return (
-      <div className="min-vh-100 bg-brand-black text-white">
-        <nav className="navbar navbar-expand-md navbar-dark navbar-glass fixed-top">
-          <div className="container-fluid px-4 py-2">
-            <span className="navbar-brand fs-3 fw-black text-brand-yellow mb-0">
-              FASTFOOD
-            </span>
-            <div className="d-none d-md-flex gap-4 mx-auto">
-              <a href="#" className="nav-link text-white fw-bold text-uppercase small">
-                منو
-              </a>
+      <div className="ff-home ff-font">
+        <nav className="ff-home-nav">
+          <div className="ff-home-nav-inner">
+            <div className="ff-home-logo">FASTFOOD</div>
+            <div className="ff-home-links">
+              <a href="#">منو</a>
               <a
                 href="#"
-                onClick={(e) => { e.preventDefault(); goToBranches(); }}
-                className="nav-link text-white fw-bold text-uppercase small"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goToBranches();
+                }}
               >
                 شعب ما
               </a>
-              <a href="#" className="nav-link text-white fw-bold text-uppercase small">
-                درباره ما
-              </a>
-              <a href="#" className="nav-link text-white fw-bold text-uppercase small">
-                تماس
-              </a>
+              <a href="#">درباره ما</a>
+              <a href="#">تماس</a>
             </div>
-            <button
-              type="button"
-              onClick={goToBranches}
-              className="btn btn-brand-yellow rounded-pill px-4 py-2"
-            >
+            <button type="button" onClick={goToBranches} className="ff-home-cta">
               سفارش آنلاین
             </button>
           </div>
         </nav>
 
-        <header className="position-relative vh-100 d-flex align-items-center justify-content-center overflow-hidden">
-          <div className="position-absolute top-0 start-0 w-100 h-100">
-            <img
-              src="/images/promo-1.jpg"
-              className="w-100 h-100 object-fit-cover opacity-75"
-              alt="Hero Burger"
-            />
-            <div className="position-absolute top-0 start-0 w-100 h-100 hero-overlay" />
+        <header className="ff-home-hero">
+          <div className="ff-home-hero-bg">
+            <img src="/images/promo-1.jpg" alt="Hero Burger" />
+            <div className="ff-home-hero-overlay" />
           </div>
-          <div className="position-relative text-center px-3 hero-content" style={{ maxWidth: 900 }}>
-            <h1 className="display-1 fw-black mb-4 lh-1">
+          <div className="ff-home-hero-content">
+            <h1 className="ff-home-hero-title">
               طعم واقعی <br />
-              <span className="text-brand-yellow">برگر</span> دست‌ساز
+              <span>برگر</span> دست‌ساز
             </h1>
-            <p className="fs-4 text-light mb-5 mx-auto" style={{ maxWidth: 600 }}>
+            <p className="ff-home-hero-desc">
               ما در فست‌فودیـو فقط غذا درست نمی‌کنیم، ما برای شما خاطره‌ای خوشمزه می‌سازیم.
             </p>
-            <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
-              <button
-                type="button"
-                onClick={goToBranches}
-                className="btn btn-light btn-lg rounded-pill fw-black px-5 py-3"
-              >
+            <div className="ff-home-hero-btns">
+              <button type="button" onClick={goToBranches} className="ff-btn-white">
                 سفارش آنلاین
               </button>
-              <button
-                type="button"
-                className="btn btn-outline-light btn-lg rounded-pill fw-black px-5 py-3"
-              >
+              <button type="button" className="ff-btn-outline">
                 مشاهده منو
               </button>
             </div>
           </div>
         </header>
 
-        <footer className="bg-black py-5 border-top border-secondary border-opacity-25">
-          <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
-            <span className="fs-2 fw-black text-brand-yellow">FASTFOOD</span>
-            <div className="d-flex gap-4">
-              <Instagram size={32} className="text-white" style={{ cursor: 'pointer' }} />
-              <Phone size={32} className="text-white" style={{ cursor: 'pointer' }} />
+        <footer className="ff-home-footer">
+          <div className="ff-home-footer-inner">
+            <div className="ff-home-footer-logo">FASTFOOD</div>
+            <div className="ff-home-footer-icons">
+              <Instagram size={32} />
+              <Phone size={32} />
             </div>
-            <p className="text-secondary fw-bold mb-0 small">
-              © ۲۰۲۴ تمامی حقوق برای فست‌فود محفوظ است.
-            </p>
+            <p className="ff-home-footer-copy">© ۲۰۲۴ تمامی حقوق برای فست‌فود محفوظ است.</p>
           </div>
         </footer>
       </div>
     );
   }
 
-  /* ─── BRANCHES VIEW ─── */
   if (view === 'branches') {
     return (
-      <div className="min-vh-100 position-relative overflow-hidden">
-        <div className="branch-bg">
+      <div className="ff-branches ff-font">
+        <div className="ff-branches-bg">
           <img src="/images/promo-1.jpg" alt="" />
-          <div className="branch-bg-overlay" />
+          <div className="ff-branches-bg-overlay" />
         </div>
 
-        <header className="position-relative d-flex align-items-center justify-content-between px-4 py-3" style={{ zIndex: 10 }}>
-          <button
-            type="button"
-            onClick={goHome}
-            className="btn btn-dark fw-bold rounded-3 px-4 py-2"
-          >
+        <header className="ff-branches-header">
+          <button type="button" onClick={goHome} className="ff-btn-back">
             بازگشت
           </button>
-          <div className="d-flex align-items-center gap-2">
-            <span className="fs-4">🍔</span>
-            <span className="text-warning fw-black fs-5">fast foodio</span>
+          <div className="ff-branches-logo">
+            <span className="ff-branches-logo-emoji">🍔</span>
+            <span className="ff-branches-logo-text">fast foodio</span>
           </div>
         </header>
 
-        <main
-          className="position-relative d-flex flex-column align-items-center justify-content-center px-3 py-4"
-          style={{ zIndex: 10, minHeight: 'calc(100vh - 180px)' }}
-        >
-          <div
-            className="w-100 bg-white bg-opacity-95 rounded-4 shadow-lg p-4 p-md-5"
-            style={{ maxWidth: 640, backdropFilter: 'blur(12px)' }}
-          >
-            <h2 className="text-center text-dark fw-black fs-4 mb-4">
-              لطفا شعبه مورد نظر خود را انتخاب کنید
-            </h2>
-            <div className="row g-2">
+        <main className="ff-branches-main">
+          <div className="ff-branches-card">
+            <h2 className="ff-branches-title">لطفا شعبه مورد نظر خود را انتخاب کنید</h2>
+            <div className="ff-branches-grid">
               {branches.map((branch) => (
-                <div key={branch.id} className="col-6 col-md-3">
-                  <button
-                    type="button"
-                    onClick={() => handleBranchSelect(branch)}
-                    disabled={!branch.isOpen}
-                    className={`btn w-100 py-3 fw-bold rounded-3 border-2 ${
-                      branch.isOpen
-                        ? 'btn-outline-secondary text-dark'
-                        : 'btn-light text-muted opacity-75'
-                    }`}
-                    style={branch.isOpen ? { borderColor: '#e4e4e7' } : undefined}
-                  >
-                    {branch.name}
-                  </button>
-                </div>
+                <button
+                  key={branch.id}
+                  type="button"
+                  onClick={() => handleBranchSelect(branch)}
+                  disabled={!branch.isOpen}
+                  className={`ff-branch-btn ${branch.isOpen ? 'open' : 'closed'}`}
+                >
+                  {branch.name}
+                </button>
               ))}
             </div>
           </div>
         </main>
 
-        <footer
-          className="position-relative d-flex align-items-center justify-content-between px-4 py-3 text-white"
-          style={{ zIndex: 10 }}
-        >
-          <a href="#" className="btn btn-link text-white p-2" aria-label="اینستاگرام">
+        <footer className="ff-branches-footer">
+          <a href="#" aria-label="اینستاگرام">
             <Instagram size={24} strokeWidth={1.5} />
           </a>
-          <p className="mb-0 small fw-medium opacity-75">
-            © حقوق مادی و معنوی متعلق به FASTFOOD است.
-          </p>
+          <p>© حقوق مادی و معنوی متعلق به FASTFOOD است.</p>
         </footer>
       </div>
     );
   }
 
-  /* ─── MENU VIEW ─── */
   return (
-    <div className="min-vh-100 bg-light d-flex flex-column">
-      <header className="bg-brand-black d-flex align-items-center justify-content-between px-3 px-md-4 flex-shrink-0" style={{ height: 56 }}>
-        <div className="d-flex align-items-center gap-2">
+    <div className="ff-menu ff-font">
+      <header className="ff-menu-header">
+        <div className="ff-menu-header-left">
           <button
             type="button"
             onClick={goToBranches}
-            className="btn btn-dark border border-secondary border-opacity-50 d-flex align-items-center gap-2 rounded-3 fw-bold small py-2 px-3"
+            className="ff-menu-header-btn"
             title="بازگشت به انتخاب شعبه"
           >
             <ArrowRight size={20} />
-            <span className="d-none d-sm-inline">بازگشت</span>
+            <span className="ff-hide-mobile">بازگشت</span>
           </button>
-          <button
-            type="button"
-            className="btn btn-dark border border-secondary border-opacity-50 rounded-3 fw-bold small py-2 px-3 d-none d-sm-inline-block"
-          >
+          <button type="button" className="ff-menu-header-btn ff-login">
             ورود
           </button>
         </div>
         <button
           type="button"
           onClick={goHome}
-          className="btn btn-link text-decoration-none d-flex align-items-center gap-2 p-0"
+          className="ff-menu-logo-btn"
           title="بازگشت به صفحه اصلی"
         >
-          <div
-            className="rounded-circle bg-white d-flex align-items-center justify-content-center"
-            style={{ width: 40, height: 40, fontSize: '1.25rem' }}
-          >
-            🍔
-          </div>
-          <span className="text-warning fw-black fs-5">Fast Foodio</span>
+          <div className="ff-menu-logo-icon">🍔</div>
+          <span className="ff-menu-logo-text">Fast Foodio</span>
         </button>
       </header>
 
-      <div className="menu-hero bg-brand-red flex-shrink-0">
-        <img
-          src="/images/promo-1.jpg"
-          alt=""
-          className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-75"
-        />
-        <img
-          src="/images/fries-1.jpg"
-          alt=""
-          className="position-absolute rounded opacity-90 object-fit-cover d-none d-md-block"
-          style={{ left: '25%', top: 0, width: '25%', height: '50%' }}
-        />
-        <div className="position-absolute top-0 start-0 w-100 h-100 bg-danger opacity-75" />
-
-        <div className="branch-info-card bg-white shadow-lg p-3">
-          <h3 className="fw-black text-dark fs-5 mb-1">{selectedBranch?.name ?? 'شعبه'}</h3>
-          <p className="text-warning fw-bold small mb-1">تا ۱۵٪ تخفیف</p>
-          <p className="text-muted mb-2" style={{ fontSize: '0.75rem' }}>
-            آدرس: {selectedBranch?.address ?? ''}
-          </p>
-          <button
-            type="button"
-            onClick={goToBranches}
-            className="btn btn-light w-100 d-flex align-items-center justify-content-center gap-1 rounded-3 fw-bold small py-2"
-          >
+      <div className="ff-menu-hero">
+        <img src="/images/promo-1.jpg" alt="" className="ff-hero-main" />
+        <img src="/images/fries-1.jpg" alt="" className="ff-hero-fries" />
+        <div className="ff-menu-hero-overlay" />
+        <div className="ff-branch-info">
+          <h3>{selectedBranch?.name ?? 'شعبه'}</h3>
+          <p className="ff-discount">تا ۱۵٪ تخفیف</p>
+          <p className="ff-address">آدرس: {selectedBranch?.address ?? ''}</p>
+          <button type="button" onClick={goToBranches} className="ff-branch-change">
             تغییر شعبه
             <ChevronDown size={16} />
           </button>
-          <div className="d-flex align-items-center gap-2 text-success mt-2">
-            <span
-              className="rounded-circle bg-success d-inline-block"
-              style={{ width: 8, height: 8 }}
-            />
-            <span className="fw-bold" style={{ fontSize: '0.75rem' }}>
-              سفارش می‌پذیریم
-            </span>
+          <div className="ff-status-open">
+            <span className="ff-status-dot" />
+            <span>سفارش می‌پذیریم</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border-bottom d-flex gap-1 px-3 px-md-4 flex-shrink-0">
+      <div className="ff-menu-tabs">
         <button
           type="button"
           onClick={() => setOrderTab('menu')}
-          className={`nav-tab-btn ${orderTab === 'menu' ? 'active' : ''}`}
+          className={`ff-tab-btn ${orderTab === 'menu' ? 'active' : ''}`}
         >
           منوی سفارش
         </button>
         <button
           type="button"
           onClick={() => setOrderTab('info')}
-          className={`nav-tab-btn ${orderTab === 'info' ? 'active' : ''}`}
+          className={`ff-tab-btn ${orderTab === 'info' ? 'active' : ''}`}
         >
           اطلاعات رستوران
         </button>
       </div>
 
       {orderTab === 'info' ? (
-        <main className="flex-grow-1 p-4 bg-light">
-          <div className="mx-auto bg-white rounded-4 shadow-sm p-4 p-md-5" style={{ maxWidth: 640 }}>
-            <h2 className="fw-black fs-4 text-dark mb-3">{selectedBranch?.name ?? 'شعبه'}</h2>
-            <p className="text-muted small lh-lg">{selectedBranch?.address ?? ''}</p>
-            <div className="d-flex align-items-center gap-2 text-success mt-3">
-              <span className="rounded-circle bg-success d-inline-block" style={{ width: 8, height: 8 }} />
-              <span className="fw-bold small">سفارش می‌پذیریم</span>
+        <main className="ff-info-page">
+          <div className="ff-info-card">
+            <h2>{selectedBranch?.name ?? 'شعبه'}</h2>
+            <p>{selectedBranch?.address ?? ''}</p>
+            <div className="ff-status-open" style={{ marginTop: '1rem' }}>
+              <span className="ff-status-dot" />
+              <span style={{ fontSize: '0.875rem' }}>سفارش می‌پذیریم</span>
             </div>
           </div>
         </main>
       ) : (
-        <div className="flex-grow-1 d-flex">
-          <main className="flex-grow-1 min-w-0 p-3 p-md-4">
-            <div ref={categoryNavRef} className="category-nav-sticky pb-3 pt-1 px-0">
-              <div className="d-flex flex-wrap gap-2 mb-3">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`btn-category d-flex align-items-center gap-2 ${
-                      visibleCategoryId === cat.id ? 'active' : ''
-                    }`}
-                  >
-                    <span>{cat.icon}</span>
-                    <span className={visibleCategoryId === cat.id ? 'fw-black' : ''}>
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
+        <div className="ff-menu-body">
+          <main className="ff-menu-main">
+            <div ref={categoryNavRef} className="ff-category-nav">
+              <div className="ff-category-list">
+                {categories.map((cat) => {
+                  const isActive = visibleCategoryId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`ff-cat-btn ${isActive ? 'active' : ''}`}
+                    >
+                      <span className="ff-cat-icon">{cat.icon}</span>
+                      <span className={isActive ? 'ff-black' : ''}>{cat.name}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="search-wrap">
-                <Search size={20} className="search-icon" />
+              <div className="ff-search-wrap">
+                <Search size={20} />
                 <input
                   type="text"
                   placeholder="جستجوی سریع"
-                  className="form-control rounded-3 py-2"
+                  className="ff-search-input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="pt-3">
+            <div className="ff-products-area">
               {productsByCategory.map(({ category, products: catProducts }) => {
                 if (catProducts.length === 0) return null;
                 return (
                   <section
                     key={category.id}
                     id={`cat-${category.id}`}
-                    className="scroll-mt-nav mb-5"
+                    className="ff-scroll-section"
                   >
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <h2 className="fw-black text-dark fs-5 d-flex align-items-center gap-2 mb-0">
+                    <div className="ff-section-header">
+                      <h2>
                         <span>{category.icon}</span>
                         {category.name}
                       </h2>
-                      <button
-                        type="button"
-                        className="btn btn-light rounded-3 p-2 text-muted"
-                        aria-label="اشتراک"
-                      >
+                      <button type="button" className="ff-share-btn" aria-label="اشتراک">
                         <Share2 size={20} />
                       </button>
                     </div>
-                    <div className="row g-3">
+                    <div className="ff-product-grid">
                       {catProducts.map((product, index) => (
-                        <div key={product.id} className="col-6 col-md-4 col-lg-3">
-                          <ProductCard
-                            product={product}
-                            onAdd={() => addToCart(product)}
-                            quantity={cart.find((i) => i.id === product.id)?.quantity || 0}
-                            onRemove={() => removeFromCart(product.id)}
-                            showNewBadge={index < 2}
-                          />
-                        </div>
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onAdd={() => addToCart(product)}
+                          quantity={cart.find((i) => i.id === product.id)?.quantity || 0}
+                          onRemove={() => removeFromCart(product.id)}
+                          showNewBadge={index < 2}
+                        />
                       ))}
                     </div>
                   </section>
                 );
               })}
               {productsByCategory.every(({ products: p }) => p.length === 0) && (
-                <div className="text-center py-5 text-muted fw-medium">محصولی یافت نشد.</div>
+                <div className="ff-no-products">محصولی یافت نشد.</div>
               )}
             </div>
           </main>
 
-          <aside
-            className="cart-sidebar d-none d-md-flex flex-column bg-white flex-shrink-0"
-            style={{ width: 320 }}
-          >
-            <div className="p-3 border-bottom flex-shrink-0">
-              <h2 className="fw-black text-dark fs-5 mb-0">سبد خرید</h2>
+          <aside className="ff-cart-sidebar">
+            <div className="ff-cart-sidebar-header">
+              <h2>سبد خرید</h2>
             </div>
-            <div className="flex-grow-1 overflow-auto p-3">
-              {cart.length === 0 ? renderEmptyCart() : renderCartItems()}
+            <div className="ff-cart-sidebar-body">
+              {cart.length === 0 ? (
+                <div className="ff-cart-empty">
+                  <div className="ff-cart-empty-icon">
+                    <ShoppingCart size={48} />
+                  </div>
+                  <p>سبد خرید خالی است</p>
+                </div>
+              ) : (
+                <>
+                  <ul className="ff-cart-list">
+                    {cart.map((item) => (
+                      <li key={item.id}>
+                        <div className="ff-cart-item">
+                          <img src={item.image} alt={item.name} />
+                          <div className="ff-cart-item-info">
+                            <p className="ff-cart-item-name">{item.name}</p>
+                            <p className="ff-cart-item-price">
+                              {(item.price * item.quantity).toLocaleString()} تومان
+                            </p>
+                            <div className="ff-cart-qty">
+                              <button
+                                type="button"
+                                onClick={() => removeFromCart(item.id)}
+                                className="ff-cart-qty-btn"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="ff-cart-qty-num">{item.quantity}</span>
+                              <button
+                                type="button"
+                                onClick={() => addToCart(item)}
+                                className="ff-cart-qty-btn"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="ff-cart-total">
+                    <div className="ff-cart-total-row">
+                      <span>جمع کل</span>
+                      <span className="ff-bold">{cartTotal.toLocaleString()} تومان</span>
+                    </div>
+                    <button type="button" className="ff-cart-checkout">
+                      تکمیل سفارش
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </aside>
         </div>
       )}
 
       {orderTab === 'menu' && (
-        <div className="mobile-cart-bar d-md-none">
-          <button
-            type="button"
-            onClick={() => setIsCartOpen(true)}
-            className="btn btn-light w-100 border-2 rounded-4 py-3 px-3 d-flex align-items-center justify-content-between shadow"
-          >
-            <div className="d-flex align-items-center gap-2">
-              <ShoppingCart size={24} className="text-secondary" />
-              <span className="fw-bold text-dark">سبد خرید</span>
-              {totalItems > 0 && (
-                <span
-                  className="badge bg-danger rounded-circle d-flex align-items-center justify-content-center"
-                  style={{ width: 24, height: 24, fontSize: '0.7rem' }}
-                >
-                  {totalItems}
-                </span>
-              )}
+        <div className="ff-mobile-cart">
+          <button type="button" onClick={() => setIsCartOpen(true)} className="ff-mobile-cart-btn">
+            <div className="ff-mobile-cart-left">
+              <ShoppingCart size={24} />
+              <span className="label">سبد خرید</span>
+              {totalItems > 0 && <span className="ff-cart-badge">{totalItems}</span>}
             </div>
             {totalItems > 0 ? (
-              <span className="fw-black text-dark">{cartTotal.toLocaleString()} تومان</span>
+              <span className="ff-mobile-cart-total">{cartTotal.toLocaleString()} تومان</span>
             ) : (
-              <span className="text-muted small">خالی</span>
+              <span className="ff-mobile-cart-empty">خالی</span>
             )}
           </button>
         </div>
       )}
 
-      <Offcanvas show={isCartOpen} onHide={() => setIsCartOpen(false)} placement="start">
-        <Offcanvas.Header className="border-bottom">
-          <Offcanvas.Title className="fw-black">سبد خرید</Offcanvas.Title>
-          <button
-            type="button"
-            className="btn btn-link p-0 text-dark"
-            onClick={() => setIsCartOpen(false)}
-            aria-label="بستن"
-          >
-            <X size={20} />
-          </button>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          {cart.length === 0 ? renderEmptyCart() : renderCartItems()}
-        </Offcanvas.Body>
-      </Offcanvas>
+      {isCartOpen && (
+        <div className="ff-drawer-overlay">
+          <div className="ff-drawer-backdrop" onClick={() => setIsCartOpen(false)} />
+          <div className="ff-drawer-panel">
+            <div className="ff-drawer-header">
+              <h2>سبد خرید</h2>
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(false)}
+                className="ff-drawer-close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="ff-drawer-body">
+              {cart.length === 0 ? (
+                <div className="ff-cart-empty">
+                  <div className="ff-cart-empty-icon" style={{ width: '4rem', height: '4rem', marginBottom: '1rem' }}>
+                    <ShoppingCart size={64} />
+                  </div>
+                  <p>سبد خرید خالی است</p>
+                </div>
+              ) : (
+                <>
+                  {cart.map((item) => (
+                    <div key={item.id} className="ff-drawer-item">
+                      <img src={item.image} alt={item.name} />
+                      <div className="ff-drawer-item-info">
+                        <p className="ff-drawer-item-name">{item.name}</p>
+                        <p className="ff-drawer-item-price">
+                          {(item.price * item.quantity).toLocaleString()} تومان
+                        </p>
+                        <div className="ff-drawer-qty">
+                          <button
+                            type="button"
+                            onClick={() => removeFromCart(item.id)}
+                            className="ff-drawer-qty-btn"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span className="ff-bold">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => addToCart(item)}
+                            className="ff-drawer-qty-btn"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="ff-drawer-total">
+                    <div className="ff-drawer-total-row">
+                      <span>جمع کل</span>
+                      <span>{cartTotal.toLocaleString()} تومان</span>
+                    </div>
+                    <button type="button" className="ff-cart-checkout">
+                      تکمیل سفارش
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -624,61 +562,55 @@ const ProductCard: React.FC<{
   showNewBadge?: boolean;
 }> = ({ product, onAdd, quantity, onRemove, showNewBadge = false }) => {
   return (
-    <div className="product-card bg-white p-3 d-flex flex-column h-100 shadow-sm">
-      <div className="product-img-wrap mb-2">
+    <div className="ff-product-card">
+      <div className="ff-product-img-wrap">
         <img src={product.image} alt={product.name} />
-        <div className="product-hover-overlay">
-          <h3 className="text-white fw-bold small mb-1">{product.name}</h3>
-          <p className="text-white opacity-75 mb-0" style={{ fontSize: '0.7rem' }}>
-            {product.description}
-          </p>
+        <div className="ff-product-img-gradient" />
+        <div className="ff-product-hover">
+          <h3>{product.name}</h3>
+          <p>{product.description}</p>
         </div>
-        {showNewBadge && (
-          <span
-            className="position-absolute top-0 end-0 m-2 badge bg-danger fw-black"
-            style={{ fontSize: '0.6rem' }}
-          >
-            NEW
-          </span>
-        )}
-        {quantity > 0 && (
-          <span
-            className="position-absolute top-0 end-0 m-2 badge bg-warning text-dark fw-black"
-            style={{ fontSize: '0.65rem' }}
-          >
-            {quantity} در سبد
-          </span>
-        )}
+        {showNewBadge && <span className="ff-badge-new">NEW</span>}
+        {quantity > 0 && <span className="ff-badge-qty">{quantity} در سبد</span>}
       </div>
 
-      <h3 className="fw-bold text-dark small mb-0 flex-grow-1">{product.name}</h3>
+      <div className="ff-product-name">
+        <h3>{product.name}</h3>
+      </div>
 
-      <div className="d-flex align-items-center justify-content-between gap-2 pt-3 mt-auto border-top border-light">
-        <div className="fw-bold text-dark" style={{ fontSize: '0.7rem' }}>
-          {product.price.toLocaleString()}{' '}
-          <span className="text-muted fw-normal">تومان</span>
+      <div className="ff-product-footer">
+        <div className="ff-product-price">
+          {product.price.toLocaleString()} <span>تومان</span>
         </div>
 
         {quantity > 0 ? (
-          <div className="qty-control">
-            <button type="button" className="qty-btn" onClick={onAdd} aria-label="افزایش">
-              <Plus size={16} />
+          <div className="ff-product-qty">
+            <button
+              type="button"
+              onClick={onAdd}
+              className="ff-product-qty-btn add"
+              aria-label="افزایش تعداد"
+            >
+              <Plus size={14} />
             </button>
-            <span className="fw-black text-center" style={{ width: 20, fontSize: '0.875rem' }}>
-              {quantity}
-            </span>
-            <button type="button" className="qty-btn remove" onClick={onRemove} aria-label="کاهش">
-              <Minus size={16} />
+            <span className="ff-product-qty-num">{quantity}</span>
+            <button
+              type="button"
+              onClick={onRemove}
+              className="ff-product-qty-btn remove"
+              aria-label="کاهش تعداد"
+            >
+              <Minus size={14} />
             </button>
           </div>
         ) : (
           <button
             type="button"
             onClick={onAdd}
-            className="btn btn-dark rounded-3 p-2"
+            className="ff-product-add"
             aria-label="افزودن به سبد"
           >
-            <Plus size={22} />
+            <Plus size={20} />
           </button>
         )}
       </div>

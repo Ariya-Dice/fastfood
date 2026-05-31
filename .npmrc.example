@@ -1,0 +1,9 @@
+# فقط برای توسعه محلی در ایران — این فایل را کپی کنید:
+# cp .npmrc.example .npmrc
+#
+# .npmrc را commit نکنید؛ Vercel به registry.npmjs.org نیاز دارد.
+
+registry=https://package-mirror.liara.ir/repository/npm/
+strict-ssl=false
+fetch-timeout=300000
+fetch-retries=5

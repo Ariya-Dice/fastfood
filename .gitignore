@@ -9,6 +9,9 @@ lerna-debug.log*
 
 node_modules
 dist
+
+# npm mirror محلی — نباید روی Vercel commit شود
+.npmrc
 dist-ssr
 *.local
 
