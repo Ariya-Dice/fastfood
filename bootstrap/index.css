@@ -1,0 +1,319 @@
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import 'bootstrap/dist/css/bootstrap.rtl.min.css';
+
+:root {
+  --ff-yellow: #facc15;
+  --ff-black: #0a0a0a;
+  --ff-red: #dc2626;
+}
+
+body {
+  font-family: 'Vazirmatn', sans-serif;
+  background: #f4f4f5;
+  margin: 0;
+  padding: 0;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: none;
+  top: 50%;
+  border-radius: 100%;
+  height: 40px;
+  width: 40px;
+  margin: 0 auto;
+  position: relative;
+  border: 3px solid #e5e5e5;
+  margin-top: -20px;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner::before {
+  position: absolute;
+  content: '';
+  border-color: #444 transparent transparent;
+  border-radius: 100%;
+  border-style: solid;
+  border-width: 3px;
+  display: block;
+  height: 100%;
+  width: 100%;
+  top: -3px;
+  left: -3px;
+}
+
+.loading .loading-spinner {
+  display: block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(360deg); }
+  100% { transform: rotate(720deg); }
+}
+
+/* Brand colors */
+.text-brand-yellow { color: var(--ff-yellow) !important; }
+.bg-brand-yellow { background-color: var(--ff-yellow) !important; }
+.bg-brand-black { background-color: var(--ff-black) !important; }
+.bg-brand-red { background-color: var(--ff-red) !important; }
+.btn-brand-yellow {
+  background-color: var(--ff-yellow);
+  border-color: var(--ff-yellow);
+  color: #000;
+  font-weight: 800;
+}
+.btn-brand-yellow:hover {
+  background-color: #fde047;
+  border-color: #fde047;
+  color: #000;
+}
+.btn-brand-red {
+  background-color: var(--ff-red);
+  border-color: var(--ff-red);
+  color: #fff;
+  font-weight: 700;
+}
+.btn-brand-red:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+/* Hero fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-content {
+  animation: fadeIn 1s ease forwards;
+}
+
+/* Navbar glass effect */
+.navbar-glass {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Hero overlay */
+.hero-overlay {
+  background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+}
+
+/* Branch background */
+.branch-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.branch-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.branch-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Category nav sticky shadow */
+.category-nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #f4f4f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Category button active state */
+.btn-category {
+  border: 2px solid #e4e4e7;
+  background: #fff;
+  color: #52525b;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.btn-category:hover {
+  border-color: #d4d4d8;
+}
+.btn-category.active {
+  border-color: var(--ff-red);
+  color: var(--ff-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Tab underline */
+.nav-tab-btn {
+  border: none;
+  background: none;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #71717a;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tab-btn:hover { color: #3f3f46; }
+.nav-tab-btn.active {
+  color: var(--ff-red);
+  border-bottom-color: var(--ff-red);
+}
+
+/* Product card */
+.product-card {
+  border-radius: 1.5rem;
+  border: 1px solid #f4f4f5;
+  transition: box-shadow 0.3s, transform 0.3s;
+  overflow: hidden;
+}
+.product-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+.product-card .product-img-wrap {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  border-radius: 1rem;
+  position: relative;
+}
+.product-card .product-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s;
+}
+.product-card:hover .product-img-wrap img {
+  transform: scale(1.1);
+}
+.product-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+.product-card:hover .product-hover-overlay {
+  opacity: 1;
+}
+
+/* Cart sidebar */
+.cart-sidebar {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  border-right: 1px solid #e4e4e7;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Menu hero */
+.menu-hero {
+  height: 11rem;
+  overflow: hidden;
+  position: relative;
+}
+@media (min-width: 768px) {
+  .menu-hero { height: 13rem; }
+}
+
+/* Branch info card on hero */
+.branch-info-card {
+  position: absolute;
+  top: 6rem;
+  right: 1rem;
+  left: 1rem;
+  border-radius: 1rem;
+  z-index: 5;
+}
+@media (min-width: 768px) {
+  .branch-info-card {
+    top: 4rem;
+    left: auto;
+    width: 18rem;
+  }
+}
+
+/* Scroll margin for category sections */
+.scroll-mt-nav {
+  scroll-margin-top: 7rem;
+}
+
+/* Quantity controls */
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f4f4f5;
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+}
+.qty-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.15s;
+}
+.qty-btn:hover { background: #fef9c3; }
+.qty-btn.remove:hover { color: var(--ff-red); }
+
+/* Mobile cart bar */
+.mobile-cart-bar {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 40;
+}
+
+/* Search input icon */
+.search-wrap {
+  position: relative;
+}
+.search-wrap .search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1aa;
+  pointer-events: none;
+}
+.search-wrap input {
+  padding-right: 2.5rem;
+}
+
+/* Selection highlight */
+::selection {
+  background: var(--ff-yellow);
+  color: #000;
+}
+
+/* Offcanvas RTL fix */
+.offcanvas-start {
+  right: 0;
+  left: auto;
+  transform: translateX(100%);
+}
+.offcanvas-start.show {
+  transform: none;
+}
